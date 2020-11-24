@@ -2,7 +2,7 @@ const presence = new Presence({
   clientId: "529569623406936065"
 });
 
-let title: string, artist: string, dj: string, listeners: number;
+let title: string, artist: string, dj: string;
 
 function getData(): void {
   window
@@ -11,7 +11,7 @@ function getData(): void {
     .then((res) => {
       title = res.song.title || "Loading..";
       dj = res.dj.livedj || "Loading..";
-      artist = res.song.artist || "Loading..."
+      artist = res.song.artist || "Loading...";
     });
 }
 
