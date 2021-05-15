@@ -1,62 +1,45 @@
-var presence = new Presence({
-    clientId: "630480510753308694"
-  }),
-  strings = presence.getStrings({
-    play: "presence.playback.playing",
-    pause: "presence.playback.paused"
-  });
-
-/**
- * Get Timestamps
- * @param {Number} videoTime Current video time seconds
- * @param {Number} videoDuration Video duration seconds
- */
-function getTimestamps(
-  videoTime: number,
-  videoDuration: number
-): Array<number> {
-  var startTime = Date.now();
-  var endTime = Math.floor(startTime / 1000) - videoTime + videoDuration;
-  return [Math.floor(startTime / 1000), endTime];
-}
+const presence = new Presence({
+  clientId: "808758769424138252"
+}),
+strings = presence.getStrings({
+  play: "presence.playback.playing",
+  pause: "presence.playback.paused"
+});
 
 presence.on("UpdateData", async () => {
-  var video: HTMLVideoElement = document.querySelector("video.vjs-tech");
+const video: HTMLVideoElement = document.querySelector("video.vjs-tech"),
+presenceData: PresenceData = {
+  largeImageKey: "logo"
+};
 
+if (document.location.pathname.includes("video") && video) {
   if (video && !isNaN(video.duration)) {
-    var title = document.querySelector(".adn-player-header a").textContent;
-    var subtitle = document.querySelector(".adn-player-header span")
-      .textContent;
-    var timestamps = getTimestamps(
-      Math.floor(video.currentTime),
-      Math.floor(video.duration)
-    );
-
-    const data: PresenceData = {
-      details: title,
-      state: subtitle,
-      largeImageKey: "adn-logo",
-      smallImageKey: video.paused ? "pause" : "play",
-      smallImageText: video.paused
-        ? (await strings).pause
-        : (await strings).play,
-      startTimestamp: timestamps[0],
-      endTimestamp: timestamps[1]
-    };
+    const title = document.querySelector("#root > div > div > div.sc-pbWVv.hTvDIL > div > div:nth-child(1) > div.sc-kbKFCX.sc-kgMcbC.kecmmo > div:nth-child(1) > div > div > h1 > a"),
+      timestamps = presence.getTimestamps(
+        Math.floor(video.currentTime),
+        Math.floor(video.duration)
+      );
+      presenceData.details = title.textContent;
+      presenceData.smallImageKey = video.paused ? "pause" : "play";
+      presenceData.smallImageText = video.paused
+          ? (await strings).pause
+          : (await strings).play;
+        presenceData.endTimestamp = timestamps[1];
 
     if (video.paused) {
-      delete data.startTimestamp;
-      delete data.endTimestamp;
+      delete presenceData.startTimestamp;
+      delete presenceData.endTimestamp;
     }
-
-    if (title !== null && subtitle !== null) {
-      presence.setActivity(data, !video.paused);
-    }
-  } else {
-    const browsingPresence: PresenceData = {
-      details: "Browsing...",
-      largeImageKey: "adn-logo"
-    };
-    presence.setActivity(browsingPresence);
   }
+} else if (document.location.pathname.includes("video") && !video) {
+  const title = document.querySelector("#root > div > div > div.sc-pbWVv.hTvDIL > div > div:nth-child(1) > div.sc-kbKFCX.sc-kgMcbC.kecmmo > div:nth-child(1) > div > div > h1 > a");
+      presenceData.details = "Looking at";
+      presenceData.state = title.textContent;
+} else presenceData.details = "Browsing...";
+if (presenceData.details === null) {
+  presence.setTrayTitle();
+  presence.setActivity();
+} else {
+  presence.setActivity(presenceData);
+}
 });
